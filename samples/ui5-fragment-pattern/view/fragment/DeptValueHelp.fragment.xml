@@ -1,0 +1,17 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <!-- Dialog 는 페이지 밖(static area)에 그려지므로 페이지 스코프 클래스를 루트에 직접 붙인다 -->
+  <Dialog id="deptValueHelpDialog" class="popup_basic budget-main" title="부서 선택" contentWidth="30rem">
+    <content>
+      <SearchField value="{vh>/keyword}" width="100%" class="popup_search"/>
+      <List id="deptList" mode="SingleSelectMaster" items="{vh>/items}">
+        <StandardListItem title="{vh>name}" description="{vh>code}"/>
+      </List>
+    </content>
+    <buttons>
+      <Button text="확인" type="Emphasized" class="btn_basic" press=".onDialogAction($event, 'Confirm')"/>
+      <Button text="닫기" type="Transparent" class="line_btn" press=".onDialogAction($event, 'Close')"/>
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

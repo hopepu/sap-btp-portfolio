@@ -1,0 +1,63 @@
+# 기능 모듈 하나의 MTA 예시 — UI5 앱 여러 개를 HTML5 Repository 에 올린다.
+# 실제 프로젝트는 이런 MTA 가 모듈별로 있고(main · cap · 기능 모듈들), 각각 독립 빌드·배포한다.
+_schema-version: "3.2"
+ID: sample-budget
+version: 1.0.0
+description: 예산 관리 기능 모듈
+
+parameters:
+  enable-parallel-deployments: true
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+
+modules:
+  # UI5 앱 → 빌드 결과(zip)를 content 모듈이 모아 HTML5 Repository 에 올린다
+  - name: budget-content
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: budget-html5-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: resources
+      requires:
+        - name: budgetplanui
+          artifacts: [budgetplanui.zip]
+          target-path: resources/
+        - name: budgetdashboardui
+          artifacts: [budgetdashboardui.zip]
+          target-path: resources/
+
+  - name: budgetplanui
+    type: html5
+    path: app/budget_plan_ui
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
+  - name: budgetdashboardui
+    type: html5
+    path: app/budget_dashboard_ui
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
+resources:
+  - name: budget-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
