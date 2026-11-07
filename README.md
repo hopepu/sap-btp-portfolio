@@ -40,6 +40,8 @@ flowchart LR
 **1. 업무 도메인 개발 (손익 · 예산 · 채권/채무 · 경비)**
 - 손익(P&L) 매트릭스·KPI·조기경보, 예산 편성·집행·승인, 매입계약·매입채무(AP)·채권, 경비 결재 화면과 CAP 서비스 구현
 - 설계서 대비 갭 분석 → AS-IS/TO-BE 정리 → 구현 → 브라우저 시나리오 테스트(최대 300개 점검 항목)까지 전 과정 수행
+- **공급업체 마스터** 신규 구축: 변경 이력, 진행 중 계약 자동 반영, 수정 시각 없는 테이블의 해시 기반 동시성 제어, 기존 계약 일괄 연결 → [samples/cap-supplier-master](samples/cap-supplier-master)
+- 새 칸(담당 조직) 추가 시 기존 수천 행을 미리보기·백업·멱등 방식으로 백필 → [samples/db-backfill-script](samples/db-backfill-script)
 
 **2. 권한 시스템 재설계**
 - Role Collection → 허용 조직 매핑 → **하위 부서 자동 전개** → 서버 측 조회·쓰기 강제의 4단계 권한 모델 설계
@@ -50,13 +52,19 @@ flowchart LR
 - 도메인별 **에이전트 레지스트리**(도구명 = CAP 액션명 계약)로 손익·예산·경비·채권채무 AI를 같은 구조로 통일
 - 화면 «자리(Slot)» 카탈로그로 *어느 카드에 어느 에이전트가 답하는지*를 데이터로 관리
 - A2A 워크플로 16종 등록·검증, MCP 도구 핸들러(메일·문서·캘린더·Teams·범용 HTTP·AI 추출) 레지스트리 설계
+- 4개 도메인 × 콘솔·화면 AI·AI Office 전수 점검(수정·재시험 3회차, 코드 점검 에이전트 + 브라우저 병행), 화면 AI 구축 표준 절차 문서화 → [docs/screen-ai-procedure.md](docs/screen-ai-procedure.md)
 - → [docs/ai-agent-platform.md](docs/ai-agent-platform.md), [samples/cap-agent-registry](samples/cap-agent-registry), [samples/cap-mcp-handlers](samples/cap-mcp-handlers)
 
 **4. 프론트엔드 표준화**
 - 3단계 CSS 구조(전역 → 앱 → 페이지)와 유틸 클래스 조합 원칙으로 디자인 시스템 정리, Figma → UI5 매핑 표 작성
 - 프래그먼트 + 전용 컨트롤러 1:1 패턴, 공용 포매터 우선 원칙 등 팀 코딩 규칙 문서화 → [docs/conventions.md](docs/conventions.md)
 
-**5. AI 페어 프로그래밍 운영**
+**5. 화면 로딩 성능 개선**
+- "느리다"를 원인 6가지로 쪼개 측정 → 제거: 셸 선행 요청 분리, 표 렌더링 방식 변경, 반복 조회 통합, 공용 유틸 DOM 감시 최적화, Tailwind Play CDN 제거, CAP `$batch` 병렬도 조정
+- 매입계약 화면 9.0초 → 3.6초(배포본 약 1.5초), 운전자금 화면 17.5초 → 7.2초, 공용 유틸 CPU 2.1초 → 0.02초
+- → [docs/performance.md](docs/performance.md), [samples/ui5-empty-cell-align](samples/ui5-empty-cell-align)
+
+**6. AI 페어 프로그래밍 운영**
 - BAS 안에서 Claude Code를 상시 운영하며 규칙 문서(CLAUDE.md)·작업 저널·체크포인트 기반으로 장시간 자율 작업을 관리
 - "추정 금지, 실측 확인" 원칙과 로컬(cds watch) ↔ 배포본 검증 구분을 규칙화
 
@@ -67,14 +75,19 @@ docs/
   architecture.md        시스템 구조 · 모듈 · 개발/배포 흐름
   ai-agent-platform.md   AI 에이전트 · 화면 자리 · A2A · MCP 설계
   conventions.md         UI5/CAP 코딩 규칙과 디자인 시스템
+  screen-ai-procedure.md 화면에 AI 카드를 붙이는 표준 절차와 함정
+  performance.md         화면 로딩 성능 개선 (원인별 측정 → 제거)
 samples/
   cap-authz/             조직 범위 권한 판정·조회 필터
   cap-pii-mask/          개인정보 칸 마스킹 (after READ 훅)
   cap-agent-registry/    도메인 에이전트 레지스트리 + 프롬프트 호출 단일 경로
   cap-mcp-handlers/      MCP 도구 핸들러 레지스트리
   cap-llm-json/          LLM "텍스트 → 스키마 JSON" 래퍼
+  cap-supplier-master/   공급업체 마스터 (변경 이력 · 계약 반영 · 해시 동시성)
+  db-backfill-script/    새 칸 백필 (미리보기 · 백업 · 멱등)
   ui5-fragment-pattern/  프래그먼트 + 전용 컨트롤러 지연 로딩
   ui5-formatter/         공용 포매터 (천단위·날짜)
+  ui5-empty-cell-align/  공용 유틸 MutationObserver 성능 개선
   mta/                   멀티 모듈 MTA 배포 디스크립터 예시
 worklog/                 월별 작업 기록
 ```
